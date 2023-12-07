@@ -14,8 +14,10 @@ namespace TryMetaRandom
 
     private static readonly NearestNeighborPictureBox NearestNeighborPictureBox1 = new NearestNeighborPictureBox();
     private static readonly List<Bitmap> Bitmaps = new List<Bitmap>();
+    private static readonly List<Bitmap> Blends = new List<Bitmap>();
     private static int _currentIndex;
     private static readonly Random Rand = new Random(Config.Seed);
+    private static bool ViewingBlend = true;
 
     public Form1()
     {
@@ -28,12 +30,15 @@ namespace TryMetaRandom
         Bitmaps.Add(Config.Downscale ? GetRandomBmp(i) : GetRandomBmp_NoDownScale(i));
       }
 
-      var metaImage = GetMetaImage();
-
-      Bitmaps.Add(metaImage);
+      Blends.Add(Bitmaps[0]);
+      for (var i = 1; i <= Bitmaps.Count; ++i)
+      {
+        Blends.Add(GetMetaImage(i));
+      }
+      Blends.RemoveAt(0);
 
       _currentIndex = 0;
-
+      btn_inspect.Enabled = false;
       UpdatePictureBox();
     }
 
@@ -99,9 +104,9 @@ namespace TryMetaRandom
       return bmp;
     }
 
-    private static Bitmap GetMetaImage()
+    private static Bitmap GetMetaImage(int depth)
     {
-      var baseImage = new Bitmap(Bitmaps[0]);
+      var baseImage = new Bitmap(Blends[depth-1]);
 
       using (var g = Graphics.FromImage(baseImage))
       {
@@ -109,7 +114,7 @@ namespace TryMetaRandom
         var imageAttributes = new ImageAttributes();
         imageAttributes.SetColorMatrix(colorMatrix, ColorMatrixFlag.Default, ColorAdjustType.Bitmap);
 
-        for (var i = 1; i < Bitmaps.Count; ++i)
+        for (var i = 1; i < depth; ++i)
         {
           var overlayImage = Bitmaps[i];
 
@@ -130,19 +135,21 @@ namespace TryMetaRandom
 
     private void btn_previous_Click(object sender, EventArgs e)
     {
-      _currentIndex = _currentIndex > 0 ? _currentIndex - 1 : Bitmaps.Count - 1;
+      _currentIndex = _currentIndex > 0 ? _currentIndex - 1 : Blends.Count - 1;
+      btn_inspect.Enabled = _currentIndex > 0;
       UpdatePictureBox();
     }
 
     private void btn_next_Click(object sender, EventArgs e)
     {
-      _currentIndex = _currentIndex < Bitmaps.Count - 1 ? _currentIndex + 1 : 0;
+      _currentIndex = _currentIndex < Blends.Count - 1 ? _currentIndex + 1 : 0;
+      btn_inspect.Enabled = _currentIndex > 0;
       UpdatePictureBox();
     }
 
     private void UpdatePictureBox()
     {
-      NearestNeighborPictureBox1.Image = Bitmaps[_currentIndex];
+      NearestNeighborPictureBox1.Image = ViewingBlend ? Blends[_currentIndex] : Bitmaps[_currentIndex];
       //btn_previous.Enabled = currentIndex > 0;
       //btn_next.Enabled = currentIndex < bitmaps.Count - 1;
     }
@@ -193,6 +200,12 @@ namespace TryMetaRandom
         Greyscale = greyscale;
         Downscale = downscale;
       }
+    }
+
+    private void btn_inspect_Click(object sender, EventArgs e)
+    {
+      ViewingBlend = !ViewingBlend;
+      UpdatePictureBox();
     }
   }
 }
