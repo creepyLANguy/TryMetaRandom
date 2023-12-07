@@ -9,8 +9,8 @@ namespace TryMetaRandom
 {
   public partial class Form1 : Form
   {
-    private static readonly Settings Config = new Settings(200, 200, 111, 5, 0.5f, false);
-    //private static Settings config = new Settings(200, 200, 111, 5, 0.5f, true);
+    private static readonly Settings Config = new Settings(200, 200, 111, 5, 0.5f, false, true);
+    //private static Settings Config = new Settings(200, 200, 111, 5, 0.5f, true , true);
 
     private static readonly NearestNeighborPictureBox NearestNeighborPictureBox1 = new NearestNeighborPictureBox();
     private static readonly List<Bitmap> Bitmaps = new List<Bitmap>();
@@ -25,7 +25,7 @@ namespace TryMetaRandom
 
       for (var i = 0; i < Config.Depth; ++i)
       {
-        Bitmaps.Add(GetRandomBmp(i));
+        Bitmaps.Add(Config.Downscale ? GetRandomBmp(i) : GetRandomBmp_NoDownScale(i));
       }
 
       var metaImage = GetMetaImage();
@@ -62,6 +62,40 @@ namespace TryMetaRandom
         }
       }
 
+      return bmp;
+    }
+
+    private static Bitmap GetRandomBmp_NoDownScale(int scaleFactor)
+    {
+      ++scaleFactor;
+      scaleFactor *= scaleFactor;
+
+      var bmp = new Bitmap(Config.Width, Config.Height);
+
+      for (var row = 0; row < bmp.Height; row += scaleFactor)
+      {
+        for (var col = 0; col < bmp.Width; col += scaleFactor)
+        {
+          Color colour;
+          if (Config.Greyscale)
+          {
+            var c = Rand.Next(256);
+            colour = Color.FromArgb(c, c, c);
+          }
+          else
+          {
+            colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
+          }
+
+          for (var x = col; x < col + scaleFactor && x < bmp.Height; ++x)
+          {
+            for (var y = row; y < row + scaleFactor && y < bmp.Width; ++y)
+            {
+              bmp.SetPixel(x, y, colour);
+            }
+          }
+        }
+      }
       return bmp;
     }
 
@@ -147,8 +181,9 @@ namespace TryMetaRandom
       public int Depth;
       public float MetaStrength;
       public bool Greyscale;
+      public bool Downscale;
 
-      public Settings(int width, int height, int seed, int depth, float metaStrength, bool greyscale)
+      public Settings(int width, int height, int seed, int depth, float metaStrength, bool greyscale, bool downscale)
       {
         Width = width;
         Height = height;
@@ -156,8 +191,8 @@ namespace TryMetaRandom
         Depth = depth;
         MetaStrength = metaStrength;
         Greyscale = greyscale;
+        Downscale = downscale;
       }
     }
-
   }
 }
