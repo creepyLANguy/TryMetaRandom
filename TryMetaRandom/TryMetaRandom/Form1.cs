@@ -14,7 +14,7 @@ namespace TryMetaRandom
     //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, true, ScalingType.None);
     //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, false , ScalingType.Accurate);
 
-    private static readonly NearestNeighbourPictureBox pictureBox = new NearestNeighbourPictureBox();
+    private static readonly NearestNeighbourPictureBox PictureBox = new NearestNeighbourPictureBox();
     private static readonly List<Bitmap> Noises = new List<Bitmap>();
     private static readonly List<Bitmap> Blends = new List<Bitmap>();
     private static readonly Random Rand = new Random(Config.Seed);
@@ -167,17 +167,17 @@ namespace TryMetaRandom
 
     private void ReplacePictureBoxWithCustomComponent()
     {
-      pictureBox.Location = pictureBox1.Location;
-      pictureBox.Size = pictureBox1.Size;
-      pictureBox.Anchor = pictureBox1.Anchor;
-      pictureBox.SizeMode = pictureBox1.SizeMode;
-      Controls.Add(pictureBox);
+      PictureBox.Location = pictureBox1.Location;
+      PictureBox.Size = pictureBox1.Size;
+      PictureBox.Anchor = pictureBox1.Anchor;
+      PictureBox.SizeMode = pictureBox1.SizeMode;
+      Controls.Add(PictureBox);
       Controls.Remove(pictureBox1);
     }
 
     private void UpdatePictureBox()
     {
-      pictureBox.Image = _viewingBlend ? Blends[_currentIndex] : Noises[_currentIndex];
+      PictureBox.Image = _viewingBlend ? Blends[_currentIndex] : Noises[_currentIndex];
       //btn_previous.Enabled = _currentIndex > 0;
       //btn_next.Enabled = _currentIndex < Bitmaps.Count - 1;
     }
