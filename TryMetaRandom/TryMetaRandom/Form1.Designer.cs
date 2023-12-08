@@ -75,6 +75,7 @@
       // btn_inspect
       // 
       this.btn_inspect.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+      this.btn_inspect.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
       this.btn_inspect.Location = new System.Drawing.Point(401, 915);
       this.btn_inspect.Name = "btn_inspect";
       this.btn_inspect.Size = new System.Drawing.Size(165, 59);

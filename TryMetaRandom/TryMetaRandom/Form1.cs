@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 
@@ -9,25 +8,37 @@ namespace TryMetaRandom
 {
   public partial class Form1 : Form
   {
-    private static readonly Settings Config = new Settings(200, 200, 111, 5, 0.5f, false, true);
-    //private static Settings Config = new Settings(200, 200, 111, 5, 0.5f, true , true);
 
-    private static readonly NearestNeighborPictureBox NearestNeighborPictureBox1 = new NearestNeighborPictureBox();
+    private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, true, ScalingType.Accurate);
+    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, true, ScalingType.Fast); 
+    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, true, ScalingType.None);
+    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, false , ScalingType.Accurate);
+
+    private static readonly NearestNeighbourPictureBox NearestNeighbourPictureBox1 = new NearestNeighbourPictureBox();
     private static readonly List<Bitmap> Bitmaps = new List<Bitmap>();
     private static readonly List<Bitmap> Blends = new List<Bitmap>();
-    private static int _currentIndex;
     private static readonly Random Rand = new Random(Config.Seed);
-    private static bool ViewingBlend = true;
+    private static int _currentIndex;
+    private static bool _viewingBlend = true;
 
     public Form1()
     {
       InitializeComponent();
 
-      ReplacePictureBoxWithSpecialOne();
+      ReplacePictureBoxWithNearestNeighborPictureBox();
 
       for (var i = 0; i < Config.Depth; ++i)
       {
-        Bitmaps.Add(Config.Downscale ? GetRandomBmp(i) : GetRandomBmp_NoDownScale(i));
+        switch (Config.Scaling)
+        {
+          case ScalingType.None:
+          case ScalingType.Accurate:
+            Bitmaps.Add(GenerateNoise_NoDownScale(i));
+            break;
+          case ScalingType.Fast:
+            Bitmaps.Add(GenerateNoise(i));
+            break;
+        }
       }
 
       Blends.Add(Bitmaps[0]);
@@ -37,12 +48,11 @@ namespace TryMetaRandom
       }
       Blends.RemoveAt(0);
 
-      _currentIndex = 0;
       btn_inspect.Enabled = false;
       UpdatePictureBox();
     }
 
-    private static Bitmap GetRandomBmp(int scaleFactor)
+    private static Bitmap GenerateNoise(int scaleFactor)
     {
       ++scaleFactor;
       scaleFactor *= scaleFactor;
@@ -53,15 +63,16 @@ namespace TryMetaRandom
       {
         for (var col = 0; col < bmp.Width; ++col)
         {
-          if (Config.Greyscale)
+          if (Config.Rgb)
           {
-            var c = Rand.Next(256);
-            var colour = Color.FromArgb(c, c, c);
+            var colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
             bmp.SetPixel(col, row, colour);
+            
           }
           else
           {
-            var colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
+            var c = Rand.Next(256);
+            var colour = Color.FromArgb(c, c, c);
             bmp.SetPixel(col, row, colour);
           }
         }
@@ -70,7 +81,7 @@ namespace TryMetaRandom
       return bmp;
     }
 
-    private static Bitmap GetRandomBmp_NoDownScale(int scaleFactor)
+    private static Bitmap GenerateNoise_NoDownScale(int scaleFactor)
     {
       ++scaleFactor;
       scaleFactor *= scaleFactor;
@@ -82,14 +93,14 @@ namespace TryMetaRandom
         for (var col = 0; col < bmp.Width; col += scaleFactor)
         {
           Color colour;
-          if (Config.Greyscale)
+          if (Config.Rgb)
           {
-            var c = Rand.Next(256);
-            colour = Color.FromArgb(c, c, c);
+            colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
           }
           else
           {
-            colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
+            var c = Rand.Next(256);
+            colour = Color.FromArgb(c, c, c);
           }
 
           for (var x = col; x < col + scaleFactor && x < bmp.Height; ++x)
@@ -101,6 +112,13 @@ namespace TryMetaRandom
           }
         }
       }
+
+      if (Config.Scaling == ScalingType.Accurate)
+      {
+        var blurAmount = scaleFactor / Math.Sqrt(Config.Depth);
+        return GaussianBlur.Blur(bmp, (int)blurAmount);
+      }
+
       return bmp;
     }
 
@@ -147,65 +165,28 @@ namespace TryMetaRandom
       UpdatePictureBox();
     }
 
-    private void UpdatePictureBox()
-    {
-      NearestNeighborPictureBox1.Image = ViewingBlend ? Blends[_currentIndex] : Bitmaps[_currentIndex];
-      //btn_previous.Enabled = currentIndex > 0;
-      //btn_next.Enabled = currentIndex < bitmaps.Count - 1;
-    }
-
-    private void ReplacePictureBoxWithSpecialOne()
-    {
-      NearestNeighborPictureBox1.Location = pictureBox1.Location;
-      NearestNeighborPictureBox1.Size = pictureBox1.Size;
-      NearestNeighborPictureBox1.Anchor = pictureBox1.Anchor;
-      NearestNeighborPictureBox1.SizeMode = pictureBox1.SizeMode;
-      NearestNeighborPictureBox1.BackColor = Color.Black;
-      Controls.Add(NearestNeighborPictureBox1);
-      Controls.Remove(pictureBox1);
-    }
-
-    internal class NearestNeighborPictureBox : PictureBox
-    {
-      protected override void OnPaint(PaintEventArgs e)
-      {
-        if (Image == null)
-        {
-          return;
-        }
-        
-        e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
-        var destRect = new Rectangle(0, 0, Width, Height);
-        e.Graphics.DrawImage(Image, destRect);
-      }
-    }
-
-    internal struct Settings
-    {
-      public int Width;
-      public int Height;
-      public int Seed;
-      public int Depth;
-      public float MetaStrength;
-      public bool Greyscale;
-      public bool Downscale;
-
-      public Settings(int width, int height, int seed, int depth, float metaStrength, bool greyscale, bool downscale)
-      {
-        Width = width;
-        Height = height;
-        Seed = seed;
-        Depth = depth;
-        MetaStrength = metaStrength;
-        Greyscale = greyscale;
-        Downscale = downscale;
-      }
-    }
-
     private void btn_inspect_Click(object sender, EventArgs e)
     {
-      ViewingBlend = !ViewingBlend;
+      _viewingBlend = !_viewingBlend;
       UpdatePictureBox();
+    }
+
+    private void UpdatePictureBox()
+    {
+      NearestNeighbourPictureBox1.Image = _viewingBlend ? Blends[_currentIndex] : Bitmaps[_currentIndex];
+      //btn_previous.Enabled = _currentIndex > 0;
+      //btn_next.Enabled = _currentIndex < Bitmaps.Count - 1;
+    }
+
+    private void ReplacePictureBoxWithNearestNeighborPictureBox()
+    {
+      NearestNeighbourPictureBox1.Location = pictureBox1.Location;
+      NearestNeighbourPictureBox1.Size = pictureBox1.Size;
+      NearestNeighbourPictureBox1.Anchor = pictureBox1.Anchor;
+      NearestNeighbourPictureBox1.SizeMode = pictureBox1.SizeMode;
+      NearestNeighbourPictureBox1.BackColor = Color.Black;
+      Controls.Add(NearestNeighbourPictureBox1);
+      Controls.Remove(pictureBox1);
     }
   }
 }
