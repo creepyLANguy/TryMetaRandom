@@ -6,13 +6,33 @@ using System.Windows.Forms;
 
 namespace TryMetaRandom
 {
+  enum ColourMode
+  {
+    RGB,
+    PALETTE,
+    GREYSCALE,
+    BW
+  }
+
   public partial class Form1 : Form
   {
+    private static readonly List<Color> Palette = new List<Color>()
+    {
+      //Color.Red,
+      //Color.Green,
+      //Color.Blue,
+      //Color.Black,
+      //Color.Purple,
+      Color.MediumPurple,
+      Color.CornflowerBlue,
+      Color.AliceBlue,
+      Color.Pink
+    };
 
-    private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, true, ScalingType.Accurate);
-    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, true, ScalingType.Fast); 
-    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, true, ScalingType.None);
-    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, false , ScalingType.Accurate);
+    private static readonly Settings Config = new Settings(200, 200, 11, 7, 0.5f, ColourMode.PALETTE, ScalingType.Accurate);
+    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, ColourMode.RGB, ScalingType.Accurate);
+    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, ColourMode.RGB, ScalingType.Fast); 
+    //private static readonly Settings Config = new Settings(200, 200, 11, 5, 0.5f, ColourMode.BW , ScalingType.Accurate);
 
     private static readonly NearestNeighbourPictureBox PictureBox = new NearestNeighbourPictureBox();
     private static readonly List<Bitmap> Noises = new List<Bitmap>();
@@ -60,17 +80,34 @@ namespace TryMetaRandom
       {
         for (var col = 0; col < bmp.Width; ++col)
         {
-          if (Config.Rgb)
+          switch (Config.ColourMode)
           {
-            var colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
-            bmp.SetPixel(col, row, colour);
-            
-          }
-          else
-          {
-            var c = Rand.Next(256);
-            var colour = Color.FromArgb(c, c, c);
-            bmp.SetPixel(col, row, colour);
+            case ColourMode.RGB:
+            {
+              var colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
+              bmp.SetPixel(col, row, colour);
+              break;
+            }
+            case ColourMode.PALETTE:
+            {
+              var colour = Palette[Rand.Next(Palette.Count)];
+              bmp.SetPixel(col, row, colour);
+              break;
+            }
+            case ColourMode.GREYSCALE:
+            {
+              var c = Rand.Next(256);
+              var colour = Color.FromArgb(c, c, c);
+              bmp.SetPixel(col, row, colour);
+              break;
+            }
+            case ColourMode.BW:
+            {
+              var c = Rand.Next(2) == 0 ? 0 : 255;
+              var colour = Color.FromArgb(c, c, c);
+              bmp.SetPixel(col, row, colour);
+              break;
+            }
           }
         }
       }
@@ -90,14 +127,33 @@ namespace TryMetaRandom
         for (var col = 0; col < bmp.Width; col += scaleFactor)
         {
           Color colour;
-          if (Config.Rgb)
+          switch (Config.ColourMode)
           {
-            colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
-          }
-          else
-          {
-            var c = Rand.Next(256);
-            colour = Color.FromArgb(c, c, c);
+            case ColourMode.RGB:
+            { 
+              colour = Color.FromArgb(Rand.Next(256), Rand.Next(256), Rand.Next(256));
+              break;
+            }
+            case ColourMode.PALETTE:
+            {
+              colour = Palette[Rand.Next(Palette.Count)];
+              bmp.SetPixel(col, row, colour);
+              break;
+            }
+            case ColourMode.GREYSCALE:
+            {
+              var c = Rand.Next(256);
+              colour = Color.FromArgb(c, c, c);
+              break;
+            }
+            case ColourMode.BW:
+            {
+              var c = Rand.Next(2) == 0 ? 0 : 255;
+              colour = Color.FromArgb(c, c, c);
+              break;
+            }
+            default:
+              throw new NotImplementedException();
           }
 
           for (var x = col; x < col + scaleFactor && x < bmp.Height; ++x)

@@ -7,17 +7,17 @@
     public int Seed;
     public int Depth;
     public float MetaStrength;
-    public bool Rgb;
+    public ColourMode ColourMode;
     public ScalingType Scaling;
 
-    public Settings(int width, int height, int seed, int depth, float metaStrength, bool rgb, ScalingType scaling)
+    public Settings(int width, int height, int seed, int depth, float metaStrength, ColourMode colourMode, ScalingType scaling)
     {
       Width = width;
       Height = height;
       Seed = seed;
       Depth = depth;
       MetaStrength = metaStrength;
-      Rgb = rgb;
+      ColourMode = colourMode;
       Scaling = scaling;
     }
   }
